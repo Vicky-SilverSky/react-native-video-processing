@@ -294,6 +294,11 @@ public class Trimmer {
     final File tempFile = createTempFile("mp4", promise, ctx);
 
     ArrayList<String> cmd = new ArrayList<String>();
+    
+    // NOTE: ADDING STARTING TIME FOR VIDEO
+    cmd.add("-ss");
+    cmd.add(startTime);
+
     cmd.add("-y"); // NOTE: OVERWRITE OUTPUT FILE
 
     // NOTE: INPUT FILE
@@ -306,19 +311,23 @@ public class Trimmer {
     // 3. "-to" (END TIME) or "-t" (TRIM TIME)
     // OTHERWISE WE WILL LOSE ACCURACY AND WILL GET WRONG CLIPPED VIDEO
 
-    cmd.add("-ss");
-    cmd.add(startTime);
+//    cmd.add("-ss");
+//    cmd.add(startTime);
 
-    cmd.add("-to");
+    // NOTE: ADDING ENDING TIME FOR VIDEO
+    cmd.add("-t");
     cmd.add(endTime);
 
     cmd.add("-preset");
     cmd.add("ultrafast");
     // NOTE: DO NOT CONVERT AUDIO TO SAVE TIME
-    cmd.add("-c:v");
+//    cmd.add("-c:v");
+//    cmd.add("copy");
+//    cmd.add("-c:a");
+//    cmd.add("copy");
+    cmd.add("-c");
     cmd.add("copy");
-    cmd.add("-c:a");
-    cmd.add("copy");
+
     // NOTE: FLAG TO CONVER "AAC" AUDIO CODEC
     // cmd.add("-strict");
     // cmd.add("-2");
