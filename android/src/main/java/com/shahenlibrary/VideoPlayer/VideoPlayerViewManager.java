@@ -50,6 +50,7 @@ public class VideoPlayerViewManager extends SimpleViewManager<VideoPlayerView> {
   private final String SET_VIDEO_END_TIME = "endTime";
   private final String SET_VIDEO_START_TIME = "startTime";
   private final String SET_VIDEO_RESIZE_MODE = "resizeMode";
+  private final String SET_VIDEO_SEEK_TIME = "seekTime";
 
   private final int COMMAND_GET_INFO = 1;
   private final int COMMAND_TRIM_MEDIA = 2;
@@ -199,4 +200,10 @@ public class VideoPlayerViewManager extends SimpleViewManager<VideoPlayerView> {
   public void setResizeMode(final VideoPlayerView player, String resizeModeOrdinalString) {
     player.setResizeMode(ScalableType.values()[Integer.parseInt(resizeModeOrdinalString)]);
   }
+  
+    @ReactProp(name = SET_VIDEO_SEEK_TIME)
+  public void setSeekTime(final VideoPlayerView player, int seekTime) {
+    player.seekTo(seekTime);
+  }
+  
 }
