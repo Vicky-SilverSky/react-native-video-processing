@@ -431,29 +431,49 @@ public class Trimmer {
     final File tempFile = createTempFile("mp4", promise, ctx);
 
     ArrayList<String> cmd = new ArrayList<String>();
+    
     cmd.add("-y");
     cmd.add("-i");
     cmd.add(source);
-    cmd.add("-c:v");
-    cmd.add("libx264");
+    cmd.add("-s");
+    cmd.add(String.valueOf(width) + "x" + String.valueOf(height));
+    cmd.add("-r");
+    cmd.add("25");
+    cmd.add("-vcodec");
+    cmd.add("mpeg4");
     cmd.add("-b:v");
-    cmd.add(Double.toString(averageBitrate/1000)+"K");
-    cmd.add("-bufsize");
-    cmd.add(Double.toString(averageBitrate/2000)+"K");
-    if ( width != 0 && height != 0 ) {
-      cmd.add("-vf");
-      cmd.add("scale=" + Integer.toString(width) + ":" + Integer.toString(height));
-    }
-
-    cmd.add("-preset");
-    cmd.add("ultrafast");
-    cmd.add("-pix_fmt");
-    cmd.add("yuv420p");
-
-    if (removeAudio) {
-      cmd.add("-an");
-    }
+    cmd.add("150k");
+    cmd.add("-b:a");
+    cmd.add("48000");
+    cmd.add("-ac");
+    cmd.add("2");
+    cmd.add("-ar");
+    cmd.add("22050");
     cmd.add(tempFile.getPath());
+    
+//     cmd.add("-y");
+//     cmd.add("-i");
+//     cmd.add(source);
+//     cmd.add("-c:v");
+//     cmd.add("libx264");
+//     cmd.add("-b:v");
+//     cmd.add(Double.toString(averageBitrate/1000)+"K");
+//     cmd.add("-bufsize");
+//     cmd.add(Double.toString(averageBitrate/2000)+"K");
+//     if ( width != 0 && height != 0 ) {
+//       cmd.add("-vf");
+//       cmd.add("scale=" + Integer.toString(width) + ":" + Integer.toString(height));
+//     }
+
+//     cmd.add("-preset");
+//     cmd.add("ultrafast");
+//     cmd.add("-pix_fmt");
+//     cmd.add("yuv420p");
+
+//     if (removeAudio) {
+//       cmd.add("-an");
+//     }
+//     cmd.add(tempFile.getPath());
 
     executeFfmpegCommand(cmd, tempFile.getPath(), ctx, promise, "compress error", cb);
   }
