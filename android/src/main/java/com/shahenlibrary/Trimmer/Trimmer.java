@@ -30,46 +30,43 @@ import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.util.Base64;
 import android.util.Log;
 
-import com.facebook.react.bridge.ReadableArray;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.shahenlibrary.Events.Events;
 import com.shahenlibrary.interfaces.OnCompressVideoListener;
-import com.shahenlibrary.interfaces.OnTrimVideoListener;
 import com.shahenlibrary.utils.VideoEdit;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Formatter;
+import java.util.UUID;
 
 import wseemann.media.FFmpegMediaMetadataRetriever;
-
-import java.util.UUID;
-import java.io.FileOutputStream;
-import java.util.Arrays;
-import java.util.ArrayList;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.InputStream;
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import android.os.AsyncTask;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import java.security.NoSuchAlgorithmException;
-import java.security.MessageDigest;
-import java.util.Formatter;
 
 
 public class Trimmer {
@@ -249,7 +246,12 @@ public class Trimmer {
       int duration = Integer.parseInt(mmr.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_DURATION));
       int width = Integer.parseInt(mmr.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
       int height = Integer.parseInt(mmr.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
-      int orientation = Integer.parseInt(mmr.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION));
+      int orientation = 0;
+      try {
+        orientation = Integer.parseInt(mmr.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION));
+      } catch (NumberFormatException e) {
+        Log.e("Get orientation : ", e.getLocalizedMessage());
+      }
       // METADATA_KEY_FRAMERATE returns a float or int or might not exist
       Integer frameRate = VideoEdit.getIntFromString(mmr.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_FRAMERATE));
       // METADATA_KEY_VARIANT_BITRATE returns a int or might not exist
@@ -281,7 +283,10 @@ public class Trimmer {
       }
 
       promise.resolve(event);
-    } finally {
+    } catch(Exception ex) {
+      promise.reject("getVideoInfo Error : ", ex.getLocalizedMessage());
+    }
+    finally {
       mmr.release();
     }
   }
@@ -291,10 +296,34 @@ public class Trimmer {
     String startTime = options.getString("startTime");
     String endTime = options.getString("endTime");
 
+    Log.e("options : ", String.valueOf(options));
+    Log.e("startTime : ", startTime);
+    Log.e("endTime : ", endTime);
+
     final File tempFile = createTempFile("mp4", promise, ctx);
 
     ArrayList<String> cmd = new ArrayList<String>();
-    
+
+//ffmpeg -i input.wmv -ss 60 -t 60 -acodec copy -vcodec copy output.wmv
+
+//    cmd.add("-ss");
+//    cmd.add(startTime);
+//
+//    cmd.add("-y");
+//
+//    cmd.add("-i");
+//    cmd.add(source);
+//
+//    cmd.add("-t");
+//    cmd.add(endTime);
+////    cmd.add("-acodec");
+////    cmd.add("-copy");
+////    cmd.add("-vcodec");
+//    cmd.add("-c");
+//    cmd.add("-copy");
+//
+//    cmd.add(tempFile.getPath());
+
     // NOTE: ADDING STARTING TIME FOR VIDEO
     cmd.add("-ss");
     cmd.add(startTime);
@@ -316,7 +345,7 @@ public class Trimmer {
 
     // NOTE: ADDING ENDING TIME FOR VIDEO
     cmd.add("-t");
-    cmd.add(endTime);
+    cmd.add(String.valueOf(Integer.parseInt(endTime) - Integer.parseInt(startTime)));
 
     cmd.add("-preset");
     cmd.add("ultrafast");
@@ -430,8 +459,10 @@ public class Trimmer {
 
     final File tempFile = createTempFile("mp4", promise, ctx);
 
+//    String[] command = {"-y", "-i", inputFileAbsolutePath, "-s", "160x120", "-r", "25", "-vcodec", "mpeg4", "-b:v", "150k", "-b:a", "48000", "-ac", "2", "-ar", "22050", outputFileAbsolutePath};
+
     ArrayList<String> cmd = new ArrayList<String>();
-    
+
     cmd.add("-y");
     cmd.add("-i");
     cmd.add(source);
@@ -450,30 +481,30 @@ public class Trimmer {
     cmd.add("-ar");
     cmd.add("22050");
     cmd.add(tempFile.getPath());
-    
-//     cmd.add("-y");
-//     cmd.add("-i");
-//     cmd.add(source);
-//     cmd.add("-c:v");
-//     cmd.add("libx264");
-//     cmd.add("-b:v");
-//     cmd.add(Double.toString(averageBitrate/1000)+"K");
-//     cmd.add("-bufsize");
-//     cmd.add(Double.toString(averageBitrate/2000)+"K");
-//     if ( width != 0 && height != 0 ) {
-//       cmd.add("-vf");
-//       cmd.add("scale=" + Integer.toString(width) + ":" + Integer.toString(height));
-//     }
 
-//     cmd.add("-preset");
-//     cmd.add("ultrafast");
-//     cmd.add("-pix_fmt");
-//     cmd.add("yuv420p");
-
-//     if (removeAudio) {
-//       cmd.add("-an");
-//     }
-//     cmd.add(tempFile.getPath());
+//    cmd.add("-y");
+//    cmd.add("-i");
+//    cmd.add(source);
+//    cmd.add("-c:v");
+//    cmd.add("libx264");
+//    cmd.add("-b:v");
+//    cmd.add(Double.toString(averageBitrate/1000)+"K");
+//    cmd.add("-bufsize");
+//    cmd.add(Double.toString(averageBitrate/2000)+"K");
+//    if ( width != 0 && height != 0 ) {
+//      cmd.add("-vf");
+//      cmd.add("scale=" + Integer.toString(width) + ":" + Integer.toString(height));
+//    }
+//
+//    cmd.add("-preset");
+//    cmd.add("ultrafast");
+//    cmd.add("-pix_fmt");
+//    cmd.add("yuv420p");
+//
+//    if (removeAudio) {
+//      cmd.add("-an");
+//    }
+//    cmd.add(tempFile.getPath());
 
     executeFfmpegCommand(cmd, tempFile.getPath(), ctx, promise, "compress error", cb);
   }
@@ -802,6 +833,7 @@ public class Trimmer {
     return new File(folder, FFMPEG_FILE_NAME).getAbsolutePath();
   }
 
+  @RequiresApi(api = Build.VERSION_CODES.KITKAT)
   public static String getSha1FromFile(final File file) {
     MessageDigest messageDigest = null;
     try {
